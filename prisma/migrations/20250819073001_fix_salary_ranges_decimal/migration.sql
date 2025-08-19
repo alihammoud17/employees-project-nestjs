@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "public"."Position" ALTER COLUMN "maxSalary" SET DATA TYPE DECIMAL(65,30),
+ALTER COLUMN "minSalary" SET DATA TYPE DECIMAL(65,30);
