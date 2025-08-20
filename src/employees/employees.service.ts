@@ -67,7 +67,7 @@ export class EmployeesService {
         address: true,
       },
       skip: (page - 1) * limit,
-      take: limit,
+      take: +limit,
       orderBy: { createdAt: 'desc' },
     });
   }
