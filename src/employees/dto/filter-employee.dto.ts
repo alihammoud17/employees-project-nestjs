@@ -3,13 +3,13 @@ import { IsOptional, IsString } from 'class-validator';
 
 export class FilterEmployeesDto {
   @ApiPropertyOptional({ description: 'Search by department name' })
-  @IsOptional() @IsString() department?: string;
+  @IsOptional() departmentId?: number;
 
   @ApiPropertyOptional({ description: 'Search by position title' })
-  @IsOptional() @IsString() title?: string;
+  @IsOptional() positionId?: number;
 
-  @ApiPropertyOptional({ description: 'Search by city or region' })
-  @IsOptional() @IsString() location?: string;
+  @ApiPropertyOptional({ description: 'Search' })
+  @IsOptional() @IsString() search?: string;
 
   @ApiPropertyOptional({ description: 'Page number', default: 1 })
   @IsOptional() page?: number;

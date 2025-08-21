@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { FilterEmployeesDto } from './dto/filter-employee.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class EmployeesService {
@@ -43,34 +44,50 @@ export class EmployeesService {
   }
 
   async findAll(filters: FilterEmployeesDto) {
-    const { department, title, location, page = 1, limit = 10 } = filters;
+  const { departmentId, positionId, search, page = 1, limit = 10 } = filters;
 
-    return this.prisma.employee.findMany({
-      where: {
-        position: {
-          title: title ? { contains: title, mode: 'insensitive' } : undefined,
-          department: {
-            name: department ? { contains: department, mode: 'insensitive' } : undefined,
-          },
-        },
-        address: location
-          ? {
-              OR: [
-                { city: { contains: location, mode: 'insensitive' } },
-                { region: { contains: location, mode: 'insensitive' } },
-              ],
-            }
-          : undefined,
-      },
-      include: {
-        position: { include: { department: true } },
-        address: true,
-      },
-      skip: (page - 1) * limit,
-      take: +limit,
-      orderBy: { createdAt: 'desc' },
-    });
-  }
+  const whereClause : Prisma.EmployeeWhereInput = {
+    OR: search
+      ? [
+          { firstName: { contains: search, mode: 'insensitive' } },
+          { lastName: { contains: search, mode: 'insensitive' } },
+          { mobileNumber: { contains: search, mode: 'insensitive' } },
+          { address: { city: { contains: search, mode: 'insensitive' } } },
+          { address: { region: { contains: search, mode: 'insensitive' } } },
+          { address: { area: { contains: search, mode: 'insensitive' } } },
+          { address: { postalCode: { contains: search, mode: 'insensitive' } } },
+        ]
+      : undefined,
+    positionId: positionId ? Number(positionId) : undefined,
+    position: {
+      departmentId: departmentId ? Number(departmentId) : undefined,
+    },
+  };
+
+  const total = await this.prisma.employee.count({ where: whereClause });
+
+  const employees = await this.prisma.employee.findMany({
+    where: whereClause,
+    include: {
+      position: { include: { department: true } },
+      address: true,
+    },
+    skip: (page - 1) * limit,
+    take: +limit,
+    orderBy: { createdAt: 'desc' },
+  });
+
+  const totalPages = Math.ceil(total / limit);
+
+  return {
+    items: employees,
+    meta: {
+      totalPages,
+      currentPage: page,
+    },
+  };
+}
+
 
   async findOne(id: number) {
     return this.prisma.employee.findUnique({
